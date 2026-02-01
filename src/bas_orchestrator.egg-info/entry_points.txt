@@ -1,2 +1,0 @@
-[console_scripts]
-bas = bas_orchestrator.cli:app
