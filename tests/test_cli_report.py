@@ -51,6 +51,7 @@ def test_report_command_text_output(tmp_path: Path) -> None:
     assert result.exit_code == 0
     assert "Campaign: test-campaign" in result.stdout
     assert "Modules" in result.stdout
+    assert "duration_ms" in result.stdout
     assert "noop-1" in result.stdout
     assert "echo-1" in result.stdout
 
@@ -71,3 +72,5 @@ def test_report_command_json_and_exit_code(tmp_path: Path) -> None:
     payload = json.loads(result.stdout.strip())
     assert payload["ok"] is False
     assert payload["summary"]["failed"] == 1
+    assert payload["results"][0]["duration_ms"] >= 0
+    assert payload["results"][0]["evidence_ref"].startswith("$.results[")

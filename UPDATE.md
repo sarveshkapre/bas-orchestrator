@@ -2,6 +2,7 @@
 
 ## Shipped
 - Added `bas report` to summarize evidence packs (human or JSON) with CI-friendly exit codes.
+- Expanded `bas report` with per-module duration and evidence pointers.
 - Added `bas validate-campaign` for preflight checks in CI (campaign + optional policy).
 - Hardened `bas verify` to fail cleanly on invalid evidence pack schemas.
 - Packaging + repo hygiene: SPDX license metadata and ignore `build/` + `dist/`.

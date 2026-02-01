@@ -278,8 +278,12 @@ def report(
                             "module_id": result.module_id,
                             "status": result.status,
                             "notes": result.notes,
+                            "duration_ms": int(
+                                (result.finished_at - result.started_at).total_seconds() * 1000
+                            ),
+                            "evidence_ref": f"$.results[{index}].evidence",
                         }
-                        for result in evidence.results
+                        for index, result in enumerate(evidence.results)
                     ],
                 },
                 sort_keys=True,
@@ -303,13 +307,23 @@ def report(
 
     module_col = max(len("module_id"), max((len(r.module_id) for r in evidence.results), default=0))
     status_col = max(len("status"), max((len(r.status) for r in evidence.results), default=0))
+    duration_col = len("duration_ms")
 
-    typer.echo(f"{'module_id'.ljust(module_col)}  {'status'.ljust(status_col)}  notes")
-    typer.echo(f"{'-' * module_col}  {'-' * status_col}  -----")
+    typer.echo(
+        f"{'module_id'.ljust(module_col)}  "
+        f"{'status'.ljust(status_col)}  "
+        f"{'duration_ms'.ljust(duration_col)}  "
+        "notes"
+    )
+    typer.echo(f"{'-' * module_col}  {'-' * status_col}  {'-' * duration_col}  -----")
     for result in evidence.results:
         notes = result.notes or ""
+        duration_ms = int((result.finished_at - result.started_at).total_seconds() * 1000)
         typer.echo(
-            f"{result.module_id.ljust(module_col)}  {result.status.ljust(status_col)}  {notes}"
+            f"{result.module_id.ljust(module_col)}  "
+            f"{result.status.ljust(status_col)}  "
+            f"{str(duration_ms).ljust(duration_col)}  "
+            f"{notes}"
         )
 
     if exit_nonzero and not ok:
