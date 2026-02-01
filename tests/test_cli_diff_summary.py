@@ -79,3 +79,50 @@ def test_diff_summary_ignore_field(tmp_path: Path) -> None:
     )
     assert result.exit_code == 0
     assert json.loads(result.stdout.strip()) == {"diffs": [], "ok": True}
+
+
+def test_diff_summary_ignore_path(tmp_path: Path) -> None:
+    golden = tmp_path / "golden.json"
+    candidate = tmp_path / "candidate.json"
+    _write_summary(golden, score=1.0, run_id="run-1")
+    _write_summary(candidate, score=0.5, run_id="run-1")
+
+    runner = CliRunner()
+    result = runner.invoke(
+        app,
+        [
+            "diff-summary",
+            str(golden),
+            str(candidate),
+            "--json",
+            "--ignore-path",
+            "score",
+        ],
+    )
+    assert result.exit_code == 0
+    assert json.loads(result.stdout.strip()) == {"diffs": [], "ok": True}
+
+
+def test_diff_summary_ignore_path_array_wildcard(tmp_path: Path) -> None:
+    golden = tmp_path / "golden.json"
+    candidate = tmp_path / "candidate.json"
+    _write_summary(golden, score=1.0, run_id="run-1")
+    _write_summary(candidate, score=1.0, run_id="run-1")
+    candidate_payload = json.loads(candidate.read_text())
+    candidate_payload["results"][0]["duration_ms"] = 999
+    candidate.write_text(json.dumps(candidate_payload))
+
+    runner = CliRunner()
+    result = runner.invoke(
+        app,
+        [
+            "diff-summary",
+            str(golden),
+            str(candidate),
+            "--json",
+            "--ignore-path",
+            "$.results[*].duration_ms",
+        ],
+    )
+    assert result.exit_code == 0
+    assert json.loads(result.stdout.strip()) == {"diffs": [], "ok": True}

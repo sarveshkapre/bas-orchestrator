@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable
 from typing import Any
 
@@ -88,7 +89,11 @@ def _validate_result(item: dict[str, Any], index: int, errors: list[str]) -> Non
 
 
 def diff_summary(
-    golden: object, candidate: object, *, ignore_fields: Iterable[str] = ()
+    golden: object,
+    candidate: object,
+    *,
+    ignore_fields: Iterable[str] = (),
+    ignore_paths: Iterable[str] = (),
 ) -> list[str]:
     if not isinstance(golden, dict):
         return ["golden summary must be a JSON object"]
@@ -100,11 +105,22 @@ def diff_summary(
     candidate_norm = {key: value for key, value in candidate.items() if key not in ignore}
 
     diffs: list[str] = []
-    _diff_values(golden_norm, candidate_norm, path="$", diffs=diffs)
+    patterns = [_normalize_path_pattern(pattern) for pattern in ignore_paths]
+    _diff_values(golden_norm, candidate_norm, path="$", diffs=diffs, ignore_patterns=patterns)
     return diffs
 
 
-def _diff_values(golden: object, candidate: object, *, path: str, diffs: list[str]) -> None:
+def _diff_values(
+    golden: object,
+    candidate: object,
+    *,
+    path: str,
+    diffs: list[str],
+    ignore_patterns: list[str],
+) -> None:
+    if _should_ignore_path(path, ignore_patterns):
+        return
+
     if isinstance(golden, dict) and isinstance(candidate, dict):
         golden_keys = set(golden.keys())
         candidate_keys = set(candidate.keys())
@@ -113,7 +129,13 @@ def _diff_values(golden: object, candidate: object, *, path: str, diffs: list[st
         for key in sorted(candidate_keys - golden_keys):
             diffs.append(f"{path}.{key} extra in candidate")
         for key in sorted(golden_keys & candidate_keys):
-            _diff_values(golden[key], candidate[key], path=f"{path}.{key}", diffs=diffs)
+            _diff_values(
+                golden[key],
+                candidate[key],
+                path=f"{path}.{key}",
+                diffs=diffs,
+                ignore_patterns=ignore_patterns,
+            )
         return
 
     if isinstance(golden, list) and isinstance(candidate, list):
@@ -122,8 +144,47 @@ def _diff_values(golden: object, candidate: object, *, path: str, diffs: list[st
                 f"{path} length differs (golden {len(golden)} vs candidate {len(candidate)})"
             )
         for index, (gold_item, cand_item) in enumerate(zip(golden, candidate, strict=False)):
-            _diff_values(gold_item, cand_item, path=f"{path}[{index}]", diffs=diffs)
+            _diff_values(
+                gold_item,
+                cand_item,
+                path=f"{path}[{index}]",
+                diffs=diffs,
+                ignore_patterns=ignore_patterns,
+            )
         return
 
     if golden != candidate:
         diffs.append(f"{path} differs (golden {golden!r} vs candidate {candidate!r})")
+
+
+def _normalize_path_pattern(pattern: str) -> str:
+    if pattern.startswith("$"):
+        return pattern
+    if pattern.startswith("."):
+        return f"${pattern}"
+    return f"$.{pattern}"
+
+
+def _should_ignore_path(path: str, patterns: list[str]) -> bool:
+    if not patterns:
+        return False
+    for pattern in patterns:
+        regex = _pattern_to_regex(pattern)
+        if re.fullmatch(regex, path):
+            return True
+    return False
+
+
+def _pattern_to_regex(pattern: str) -> str:
+    placeholder = "__IDX__"
+    pattern = pattern.replace("[*]", placeholder)
+    escaped = ""
+    for char in pattern:
+        if char == "*":
+            escaped += ".*"
+        elif char == "?":
+            escaped += "."
+        else:
+            escaped += re.escape(char)
+    escaped = escaped.replace(re.escape(placeholder), r"\[\d+\]")
+    return escaped

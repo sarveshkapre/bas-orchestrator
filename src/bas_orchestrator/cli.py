@@ -73,6 +73,11 @@ DIFF_SUMMARY_IGNORE_OPT = typer.Option(
     "--ignore-field",
     help="Top-level fields to ignore (repeatable)",
 )
+DIFF_SUMMARY_IGNORE_PATH_OPT = typer.Option(
+    None,
+    "--ignore-path",
+    help="JSON-path patterns to ignore (repeatable, supports * and [*])",
+)
 POLICY_HASH_ARG = typer.Argument(..., help="Path to policy YAML/JSON")
 POLICY_HASH_JSON_OPT = typer.Option(False, "--json", help="Emit machine-readable JSON output")
 VALIDATE_CAMPAIGN_ARG = typer.Argument(..., help="Path to campaign YAML")
@@ -391,6 +396,7 @@ def diff_summary(
     candidate_path: Path = DIFF_SUMMARY_CANDIDATE_ARG,
     json_output: bool = DIFF_SUMMARY_JSON_OPT,
     ignore_field: list[str] | None = DIFF_SUMMARY_IGNORE_OPT,
+    ignore_path: list[str] | None = DIFF_SUMMARY_IGNORE_PATH_OPT,
 ) -> None:
     if not golden_path.exists():
         raise typer.BadParameter(f"Golden summary not found: {golden_path}")
@@ -409,6 +415,7 @@ def diff_summary(
         golden_payload,
         candidate_payload,
         ignore_fields=ignore_field or [],
+        ignore_paths=ignore_path or [],
     )
     ok = not diffs
     if json_output:

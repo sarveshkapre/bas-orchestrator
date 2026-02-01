@@ -13,6 +13,7 @@
 - Added `bas diff-summary` for golden summary drift detection.
 - Documented policy hash derivation in Agent API spec.
 - Added explicit CA bundle error messaging for agent TLS setup.
+- Added diff-summary ignore-path support for nested fields.
 - Hardened `bas verify` to fail cleanly on invalid evidence pack schemas.
 - Packaging + repo hygiene: SPDX license metadata and ignore `build/` + `dist/`.
 

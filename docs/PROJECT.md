@@ -16,6 +16,6 @@ make release
 - Python 3.11+ recommended.
 
 ## Next 3 improvements
-1. Add agent client CA bundle error messaging (missing/invalid CA file).
-2. Add policy hash docs to Agent API spec.
-3. Add summary diff ignore patterns (nested paths/globs).
+1. Add evidence summary schema validation in engine outputs.
+2. Add summary diff ignore patterns for nested paths/globs in CLI docs.
+3. Add agent policy hash mismatch guidance in README.

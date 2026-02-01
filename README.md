@@ -27,7 +27,7 @@ bas validate-campaign examples/basic-campaign.yaml
 bas validate-campaign examples/basic-campaign.yaml --json
 bas report evidence.json --json > summary.json
 bas validate-summary summary.json --json
-bas diff-summary summary.golden.json summary.json --json --ignore-field run_id --ignore-field started_at --ignore-field finished_at
+bas diff-summary summary.golden.json summary.json --json --ignore-field run_id --ignore-field started_at --ignore-field finished_at --ignore-path "$.results[*].duration_ms"
 bas policy-hash tests/fixtures/policy.yaml
 bas policy-hash tests/fixtures/policy.yaml --json
 bas validate-module --spec tests/fixtures/module_spec.yaml --result tests/fixtures/module_result.json
