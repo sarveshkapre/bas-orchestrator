@@ -53,6 +53,10 @@ class AgentClient:
             raise AgentClientError("Agent client disabled")
         if self._config.base_url.startswith("http://") and not self._config.allow_insecure_http:
             raise AgentClientError("Insecure agent URL; use https:// or allow_insecure_http")
+        if (self._config.cert_path and not self._config.key_path) or (
+            self._config.key_path and not self._config.cert_path
+        ):
+            raise AgentClientError("Both cert_path and key_path are required for TLS client auth")
 
         if self._config.base_url.startswith("mock://"):
             result = HandshakeResult(

@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## [Unreleased]
+- Added TLS client auth validation to agent handshake (cert/key pairing).
 - Added `bas validate-summary` for CI validation of evidence summaries.
 - Added evidence summary JSON schema export for downstream tooling.
 - Hardened remote agent trust checks (reject insecure http by default, validate handshake capabilities).

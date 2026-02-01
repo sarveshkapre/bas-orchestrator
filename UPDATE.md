@@ -8,6 +8,7 @@
 - Hardened remote agent trust checks (reject insecure http by default, validate handshake caps).
 - Added evidence summary schema export for downstream tooling.
 - Added `bas validate-summary` for CI validation of report output.
+- Added TLS client auth validation for agent handshake (cert/key pairing).
 - Hardened `bas verify` to fail cleanly on invalid evidence pack schemas.
 - Packaging + repo hygiene: SPDX license metadata and ignore `build/` + `dist/`.
 

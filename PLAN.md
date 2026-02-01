@@ -27,6 +27,7 @@ make build
 ```
 
 ## Shipped (most recent first)
+- 2026-02-01: Added TLS client auth validation for agent handshake.
 - 2026-02-01: Added `bas validate-summary` for CI checks of report output.
 - 2026-02-01: Added evidence summary schema export.
 - 2026-02-01: Hardened remote agent trust checks (reject insecure http by default, validate handshake caps).
