@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from bas_orchestrator.agent_client import AgentClientConfig
 from bas_orchestrator.engine import (
     CampaignLoadError,
+    effective_allowlist,
     load_campaign,
     load_policy,
     run_campaign,
@@ -17,7 +18,7 @@ from bas_orchestrator.engine import (
     verify_evidence,
 )
 from bas_orchestrator.models import EvidencePack, ModuleResult, ModuleSpec
-from bas_orchestrator.modules.registry import list_modules
+from bas_orchestrator.modules.registry import get_module, list_modules
 from bas_orchestrator.schema import dump_schemas
 
 app = typer.Typer(no_args_is_help=True)
@@ -52,6 +53,11 @@ REPORT_EXIT_NONZERO_OPT = typer.Option(
     "--exit-nonzero",
     help="Exit with code 1 if any module failed/errored (code 2 is reserved for invalid inputs)",
 )
+VALIDATE_CAMPAIGN_ARG = typer.Argument(..., help="Path to campaign YAML")
+VALIDATE_CAMPAIGN_POLICY_OPT = typer.Option(
+    None, "--policy", help="Policy YAML/JSON path with allowlists"
+)
+VALIDATE_CAMPAIGN_JSON_OPT = typer.Option(False, "--json", help="Emit machine-readable JSON output")
 
 EXAMPLE_CAMPAIGN = """version: v1
 name: "basic-campaign"
@@ -308,3 +314,82 @@ def report(
 
     if exit_nonzero and not ok:
         raise typer.Exit(code=1)
+
+
+@app.command()
+def validate_campaign(
+    campaign: Path = VALIDATE_CAMPAIGN_ARG,
+    policy_path: Path | None = VALIDATE_CAMPAIGN_POLICY_OPT,
+    json_output: bool = VALIDATE_CAMPAIGN_JSON_OPT,
+) -> None:
+    policy = None
+    if policy_path is not None:
+        try:
+            policy = load_policy(policy_path)
+        except CampaignLoadError as exc:
+            if json_output:
+                typer.echo(json.dumps({"ok": False, "reason": "invalid_policy"}))
+            raise typer.Exit(code=2) from exc
+
+    try:
+        spec = load_campaign(campaign)
+    except CampaignLoadError as exc:
+        if json_output:
+            typer.echo(json.dumps({"ok": False, "reason": "invalid_campaign"}))
+        raise typer.Exit(code=2) from exc
+    except ValidationError as exc:
+        if json_output:
+            typer.echo(json.dumps({"ok": False, "reason": "invalid_campaign_schema"}))
+        raise typer.Exit(code=2) from exc
+
+    target_ids = {target.id for target in spec.targets}
+    errors: list[dict[str, str]] = []
+
+    for module_spec in spec.modules:
+        if module_spec.target_id not in target_ids:
+            errors.append(
+                {
+                    "code": "unknown_target",
+                    "module_id": module_spec.id,
+                    "message": f"Unknown target_id: {module_spec.target_id}",
+                }
+            )
+
+        try:
+            get_module(module_spec.module)
+        except KeyError:
+            errors.append(
+                {
+                    "code": "unknown_module",
+                    "module_id": module_spec.id,
+                    "message": f"Unknown module: {module_spec.module}",
+                }
+            )
+
+        allowlist = effective_allowlist(module_spec, policy)
+        if not allowlist:
+            errors.append(
+                {
+                    "code": "empty_allowlist",
+                    "module_id": module_spec.id,
+                    "message": "Effective scope allowlist is empty",
+                }
+            )
+
+    ok = not errors
+
+    if json_output:
+        typer.echo(json.dumps({"ok": ok, "errors": errors}, sort_keys=True))
+        if not ok:
+            raise typer.Exit(code=1)
+        return
+
+    if ok:
+        typer.echo("campaign ok")
+        return
+
+    typer.echo("campaign invalid")
+    for error in errors:
+        module_id = error.get("module_id", "?")
+        typer.echo(f"- [{error['code']}] {module_id}: {error['message']}")
+    raise typer.Exit(code=1)

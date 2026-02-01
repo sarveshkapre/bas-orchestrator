@@ -150,13 +150,13 @@ def run_campaign(
             )
             continue
 
-        effective_allowlist = _effective_allowlist(module_spec, policy)
+        allowlist = effective_allowlist(module_spec, policy)
         context = ModuleContext(
             module_id=module_spec.id,
             target_id=module_spec.target_id,
             params=module_spec.params,
             expectations=module_spec.expectations,
-            scope_allowlist=effective_allowlist,
+            scope_allowlist=allowlist,
         )
 
         if agent is not None:
@@ -180,7 +180,7 @@ def run_campaign(
                 "params": module_spec.params,
                 "expectations": module_spec.expectations,
                 "scope": {
-                    "allowlist": effective_allowlist,
+                    "allowlist": allowlist,
                     "expires_at": (fixed_time or datetime.now(UTC)).isoformat(),
                 },
             }
@@ -246,7 +246,7 @@ def _sign_payload(evidence: EvidencePack, key: str) -> str:
     return hmac.new(key.encode("utf-8"), message, hashlib.sha256).hexdigest()
 
 
-def _effective_allowlist(module_spec: ModuleSpec, policy: PolicySpec | None) -> list[str]:
+def effective_allowlist(module_spec: ModuleSpec, policy: PolicySpec | None) -> list[str]:
     if policy is None:
         return module_spec.scope_allowlist
 

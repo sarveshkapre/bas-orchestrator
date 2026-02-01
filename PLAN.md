@@ -27,8 +27,8 @@ make build
 ```
 
 ## Shipped (most recent first)
+- 2026-02-01: Added `bas validate-campaign` for preflight validation (campaign + policy).
 - 2026-02-01: Added `bas report` for human/JSON evidence summaries and CI-friendly exit codes; hardened `bas verify` on invalid schemas; fixed packaging license metadata.
 
 ## Next to ship
-- Add `bas validate-campaign` for preflight checks (version, targets, modules, policy).
 - Extend `bas report` output polish (durations, per-module evidence pointers).

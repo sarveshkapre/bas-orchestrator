@@ -23,6 +23,8 @@ bas verify evidence.json --sign-key "dev-key"
 bas verify evidence.json --sign-key "dev-key" --json
 bas report evidence.json
 bas report evidence.json --exit-nonzero
+bas validate-campaign examples/basic-campaign.yaml
+bas validate-campaign examples/basic-campaign.yaml --json
 bas validate-module --spec tests/fixtures/module_spec.yaml --result tests/fixtures/module_result.json
 bas export-schemas --out schemas
 bas run examples/basic-campaign.yaml --out evidence.json --agent-enabled --agent-url https://agent.local --agent-id agent-1
