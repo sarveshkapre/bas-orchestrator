@@ -12,4 +12,4 @@ make build
 ```
 
 ## PR
-- Pending (will be created via `gh pr create`).
+- https://github.com/sarveshkapre/bas-orchestrator/pull/1
