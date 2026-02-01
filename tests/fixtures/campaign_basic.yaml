@@ -1,0 +1,21 @@
+version: v1
+name: "basic-campaign"
+targets:
+  - id: "local-host"
+    name: "Local Host"
+    tags: ["dev"]
+modules:
+  - id: "noop-1"
+    module: "noop"
+    target_id: "local-host"
+    scope_allowlist: ["local"]
+    expectations: {}
+    params: {}
+  - id: "echo-1"
+    module: "echo_expectation"
+    target_id: "local-host"
+    scope_allowlist: ["local"]
+    expectations:
+      expected_value: "ok"
+    params:
+      value: "ok"

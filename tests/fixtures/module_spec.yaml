@@ -1,0 +1,9 @@
+id: "echo-1"
+module: "echo_expectation"
+target_id: "local-host"
+scope_allowlist:
+  - "local"
+expectations:
+  expected_value: "ok"
+params:
+  value: "ok"
