@@ -9,3 +9,4 @@ bas export-schemas --out schemas
 Outputs:
 - `schemas/campaign.schema.json`
 - `schemas/evidence.schema.json`
+- `schemas/summary.schema.json`

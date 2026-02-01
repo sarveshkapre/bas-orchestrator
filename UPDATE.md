@@ -6,6 +6,7 @@
 - Added `bas validate-campaign` for preflight checks in CI (campaign + optional policy).
 - Added schema compatibility tests for campaign/evidence contracts.
 - Hardened remote agent trust checks (reject insecure http by default, validate handshake caps).
+- Added evidence summary schema export for downstream tooling.
 - Hardened `bas verify` to fail cleanly on invalid evidence pack schemas.
 - Packaging + repo hygiene: SPDX license metadata and ignore `build/` + `dist/`.
 

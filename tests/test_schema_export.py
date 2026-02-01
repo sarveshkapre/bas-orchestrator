@@ -10,8 +10,11 @@ def test_dump_schemas(tmp_path: Path) -> None:
     dump_schemas(tmp_path)
     campaign = tmp_path / "campaign.schema.json"
     evidence = tmp_path / "evidence.schema.json"
+    summary = tmp_path / "summary.schema.json"
 
     assert campaign.exists()
     assert evidence.exists()
+    assert summary.exists()
     assert json.loads(campaign.read_text())["title"] == "CampaignSpec"
     assert json.loads(evidence.read_text())["title"] == "EvidencePack"
+    assert json.loads(summary.read_text())["title"] == "EvidenceSummary"

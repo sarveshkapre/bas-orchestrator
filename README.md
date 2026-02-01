@@ -32,6 +32,8 @@ bas run examples/basic-campaign.yaml --out evidence.json --agent-enabled --agent
 bas run examples/basic-campaign.yaml --out evidence.json --policy tests/fixtures/policy.yaml
 ```
 
+Schema export outputs: `campaign.schema.json`, `evidence.schema.json`, `summary.schema.json`.
+
 ## Example campaign
 See `examples/basic-campaign.yaml` for a minimal end-to-end campaign spec.
 

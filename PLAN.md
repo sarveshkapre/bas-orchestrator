@@ -27,6 +27,7 @@ make build
 ```
 
 ## Shipped (most recent first)
+- 2026-02-01: Added evidence summary schema export.
 - 2026-02-01: Hardened remote agent trust checks (reject insecure http by default, validate handshake caps).
 - 2026-02-01: Added schema compatibility tests for core contracts.
 - 2026-02-01: Enhanced `bas report` with per-module durations and evidence pointers.

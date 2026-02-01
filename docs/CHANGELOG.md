@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## [Unreleased]
+- Added evidence summary JSON schema export for downstream tooling.
 - Hardened remote agent trust checks (reject insecure http by default, validate handshake capabilities).
 - Added schema compatibility tests to lock core campaign/evidence contracts.
 - Expanded `bas report` output with per-module duration and evidence pointers.
