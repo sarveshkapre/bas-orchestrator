@@ -11,6 +11,7 @@
 - Added TLS client auth validation for agent handshake (cert/key pairing).
 - Added `bas policy-hash` helper for CI usage.
 - Added `bas diff-summary` for golden summary drift detection.
+- Documented policy hash derivation in Agent API spec.
 - Hardened `bas verify` to fail cleanly on invalid evidence pack schemas.
 - Packaging + repo hygiene: SPDX license metadata and ignore `build/` + `dist/`.
 

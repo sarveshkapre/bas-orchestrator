@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## [Unreleased]
+- Documented policy hash derivation in Agent API spec.
 - Added `bas diff-summary` to detect evidence summary drift against a golden file.
 - Added `bas policy-hash` to derive expected agent policy hashes.
 - Added TLS client auth validation to agent handshake (cert/key pairing).

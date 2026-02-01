@@ -27,6 +27,7 @@ make build
 ```
 
 ## Shipped (most recent first)
+- 2026-02-01: Documented policy hash derivation in agent API spec.
 - 2026-02-01: Added `bas diff-summary` for golden comparison.
 - 2026-02-01: Added `bas policy-hash` helper for CI usage.
 - 2026-02-01: Added TLS client auth validation for agent handshake.

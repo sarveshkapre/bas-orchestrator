@@ -53,6 +53,8 @@ Response:
 - `scope.expires_at` must be in the future.
 - Agents enforce allowlists locally and report denials.
 - Orchestrator may reject agents if `policy_hash` does not match expected.
+- `policy_hash` should be `sha256` of the canonical policy JSON (sorted keys, compact separators).
+- Use `bas policy-hash <policy.yaml>` to derive the expected hash in CI.
 
 ## Errors
 - Use HTTP 400 for invalid payloads.
