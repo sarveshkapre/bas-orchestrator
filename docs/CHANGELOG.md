@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## [Unreleased]
+- Added schema compatibility tests to lock core campaign/evidence contracts.
 - Expanded `bas report` output with per-module duration and evidence pointers.
 - Added `bas validate-campaign` for CI-friendly preflight validation of campaigns and policy allowlists.
 - Added `bas report` to summarize evidence packs (human-readable or JSON) with CI-friendly exit codes.
