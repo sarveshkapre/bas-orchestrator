@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## [Unreleased]
+- Hardened remote agent trust checks (reject insecure http by default, validate handshake capabilities).
 - Added schema compatibility tests to lock core campaign/evidence contracts.
 - Expanded `bas report` output with per-module duration and evidence pointers.
 - Added `bas validate-campaign` for CI-friendly preflight validation of campaigns and policy allowlists.

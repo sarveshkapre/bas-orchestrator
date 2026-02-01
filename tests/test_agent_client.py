@@ -48,3 +48,50 @@ def test_mock_handshake_and_execute() -> None:
         }
     )
     assert module.status == "pass"
+
+
+def test_handshake_rejects_insecure_http() -> None:
+    client = AgentClient(AgentClientConfig(base_url="http://agent", enabled=True))
+    try:
+        client.handshake(
+            agent_id="agent-1",
+            capabilities=["noop"],
+            version="v1",
+            expected_policy_hash=None,
+        )
+    except AgentClientError as exc:
+        assert "Insecure" in str(exc)
+    else:
+        raise AssertionError("expected AgentClientError")
+
+
+def test_handshake_requires_capabilities() -> None:
+    client = AgentClient(AgentClientConfig(base_url="mock://agent", enabled=True))
+    try:
+        client.handshake(
+            agent_id="agent-1",
+            capabilities=[],
+            version="v1",
+            expected_policy_hash=None,
+        )
+    except AgentClientError as exc:
+        assert "capabilities" in str(exc)
+    else:
+        raise AssertionError("expected AgentClientError")
+
+
+def test_handshake_rejects_missing_requested_capability() -> None:
+    client = AgentClient(
+        AgentClientConfig(base_url="mock://agent", enabled=True, mock_capabilities=["noop"])
+    )
+    try:
+        client.handshake(
+            agent_id="agent-1",
+            capabilities=["noop", "echo_expectation"],
+            version="v1",
+            expected_policy_hash=None,
+        )
+    except AgentClientError as exc:
+        assert "requested capabilities" in str(exc)
+    else:
+        raise AssertionError("expected AgentClientError")

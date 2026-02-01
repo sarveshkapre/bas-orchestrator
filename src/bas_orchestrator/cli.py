@@ -35,6 +35,9 @@ AGENT_ENABLED_OPT = typer.Option(False, "--agent-enabled", help="Enable remote a
 AGENT_CERT_OPT = typer.Option(None, "--agent-cert", help="Client TLS cert path")
 AGENT_KEY_OPT = typer.Option(None, "--agent-key", help="Client TLS key path")
 AGENT_CA_OPT = typer.Option(None, "--agent-ca", help="CA bundle path for agent TLS")
+AGENT_INSECURE_OPT = typer.Option(
+    False, "--agent-insecure", help="Allow insecure http:// agent URLs (not recommended)"
+)
 POLICY_OPT = typer.Option(None, "--policy", help="Policy YAML/JSON path with allowlists")
 AGENT_ID_OPT = typer.Option(None, "--agent-id", help="Agent id used during handshake")
 AGENT_POLICY_HASH_OPT = typer.Option(
@@ -103,6 +106,7 @@ def run(
     agent_cert: str | None = AGENT_CERT_OPT,
     agent_key: str | None = AGENT_KEY_OPT,
     agent_ca: str | None = AGENT_CA_OPT,
+    agent_insecure: bool = AGENT_INSECURE_OPT,
     policy_path: Path | None = POLICY_OPT,
     agent_id: str | None = AGENT_ID_OPT,
     agent_policy_hash: str | None = AGENT_POLICY_HASH_OPT,
@@ -131,6 +135,7 @@ def run(
             enabled=True,
             agent_id=agent_id,
             expected_policy_hash=agent_policy_hash,
+            allow_insecure_http=agent_insecure,
         )
     evidence = run_campaign(
         spec,

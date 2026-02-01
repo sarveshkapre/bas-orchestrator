@@ -20,6 +20,7 @@ class AgentClientConfig:
     timeout_seconds: float = 10.0
     agent_id: str | None = None
     expected_policy_hash: str | None = None
+    allow_insecure_http: bool = False
     mock_capabilities: list[str] | None = None
     mock_policy_hash: str | None = None
 
@@ -50,6 +51,8 @@ class AgentClient:
     ) -> HandshakeResult:
         if not self._config.enabled:
             raise AgentClientError("Agent client disabled")
+        if self._config.base_url.startswith("http://") and not self._config.allow_insecure_http:
+            raise AgentClientError("Insecure agent URL; use https:// or allow_insecure_http")
 
         if self._config.base_url.startswith("mock://"):
             result = HandshakeResult(
@@ -57,6 +60,7 @@ class AgentClient:
                 capabilities=self._config.mock_capabilities or capabilities,
                 policy_hash=self._config.mock_policy_hash,
             )
+            self._validate_handshake(result, capabilities)
             self._validate_policy_hash(result, expected_policy_hash)
             self._handshake = result
             return result
@@ -72,6 +76,7 @@ class AgentClient:
             capabilities=list(response.get("capabilities", [])),
             policy_hash=response.get("policy_hash"),
         )
+        self._validate_handshake(result, capabilities)
         self._validate_policy_hash(result, expected_policy_hash)
         self._handshake = result
         return result
@@ -139,3 +144,16 @@ class AgentClient:
     ) -> None:
         if expected_policy_hash and expected_policy_hash != result.policy_hash:
             raise AgentClientError("Agent policy hash mismatch")
+
+    def _validate_handshake(self, result: HandshakeResult, requested: list[str]) -> None:
+        if not result.agent_id:
+            raise AgentClientError("Agent handshake missing agent_id")
+        if not result.capabilities:
+            raise AgentClientError("Agent handshake missing capabilities")
+        if any(
+            not isinstance(capability, str) or not capability for capability in result.capabilities
+        ):
+            raise AgentClientError("Agent handshake returned invalid capability")
+        missing = set(requested) - set(result.capabilities)
+        if missing:
+            raise AgentClientError("Agent missing requested capabilities")

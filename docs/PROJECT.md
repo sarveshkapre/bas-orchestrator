@@ -16,6 +16,6 @@ make release
 - Python 3.11+ recommended.
 
 ## Next 3 improvements
-1. Add campaign schema compatibility tests (schema versioning/back-compat contract).
-2. Tighten remote agent trust model (policy hashing, TLS defaults, richer handshake validation).
-3. Add evidence pack summary schema for downstream tooling.
+1. Add evidence pack summary schema for downstream tooling.
+2. Add agent client TLS hardening tests (cert/CA edge cases).
+3. Add policy hash derivation helper for CI usage.
