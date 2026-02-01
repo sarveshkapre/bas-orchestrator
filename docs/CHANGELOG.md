@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## [Unreleased]
+- Added `bas diff-summary` to detect evidence summary drift against a golden file.
 - Added `bas policy-hash` to derive expected agent policy hashes.
 - Added TLS client auth validation to agent handshake (cert/key pairing).
 - Added `bas validate-summary` for CI validation of evidence summaries.

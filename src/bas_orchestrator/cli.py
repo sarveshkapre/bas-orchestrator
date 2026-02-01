@@ -21,7 +21,12 @@ from bas_orchestrator.engine import (
 from bas_orchestrator.models import EvidencePack, ModuleResult, ModuleSpec
 from bas_orchestrator.modules.registry import get_module, list_modules
 from bas_orchestrator.schema import dump_schemas
-from bas_orchestrator.summary_validate import validate_summary as validate_summary_payload
+from bas_orchestrator.summary_validate import (
+    diff_summary as diff_summary_payload,
+)
+from bas_orchestrator.summary_validate import (
+    validate_summary as validate_summary_payload,
+)
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -60,6 +65,14 @@ REPORT_EXIT_NONZERO_OPT = typer.Option(
 )
 VALIDATE_SUMMARY_ARG = typer.Argument(..., help="Path to summary JSON")
 VALIDATE_SUMMARY_JSON_OPT = typer.Option(False, "--json", help="Emit machine-readable JSON output")
+DIFF_SUMMARY_GOLDEN_ARG = typer.Argument(..., help="Path to golden summary JSON")
+DIFF_SUMMARY_CANDIDATE_ARG = typer.Argument(..., help="Path to candidate summary JSON")
+DIFF_SUMMARY_JSON_OPT = typer.Option(False, "--json", help="Emit machine-readable JSON output")
+DIFF_SUMMARY_IGNORE_OPT = typer.Option(
+    None,
+    "--ignore-field",
+    help="Top-level fields to ignore (repeatable)",
+)
 POLICY_HASH_ARG = typer.Argument(..., help="Path to policy YAML/JSON")
 POLICY_HASH_JSON_OPT = typer.Option(False, "--json", help="Emit machine-readable JSON output")
 VALIDATE_CAMPAIGN_ARG = typer.Argument(..., help="Path to campaign YAML")
@@ -369,6 +382,47 @@ def validate_summary(
     typer.echo("summary invalid")
     for error in errors:
         typer.echo(f"- {error}")
+    raise typer.Exit(code=1)
+
+
+@app.command()
+def diff_summary(
+    golden_path: Path = DIFF_SUMMARY_GOLDEN_ARG,
+    candidate_path: Path = DIFF_SUMMARY_CANDIDATE_ARG,
+    json_output: bool = DIFF_SUMMARY_JSON_OPT,
+    ignore_field: list[str] | None = DIFF_SUMMARY_IGNORE_OPT,
+) -> None:
+    if not golden_path.exists():
+        raise typer.BadParameter(f"Golden summary not found: {golden_path}")
+    if not candidate_path.exists():
+        raise typer.BadParameter(f"Candidate summary not found: {candidate_path}")
+
+    try:
+        golden_payload = json.loads(golden_path.read_text())
+        candidate_payload = json.loads(candidate_path.read_text())
+    except json.JSONDecodeError as exc:
+        if json_output:
+            typer.echo(json.dumps({"ok": False, "reason": "invalid_json"}))
+        raise typer.Exit(code=2) from exc
+
+    diffs = diff_summary_payload(
+        golden_payload,
+        candidate_payload,
+        ignore_fields=ignore_field or [],
+    )
+    ok = not diffs
+    if json_output:
+        typer.echo(json.dumps({"ok": ok, "diffs": diffs}, sort_keys=True))
+        if not ok:
+            raise typer.Exit(code=1)
+        return
+
+    if ok:
+        typer.echo("summary matches golden")
+        return
+    typer.echo("summary drift detected")
+    for diff in diffs:
+        typer.echo(f"- {diff}")
     raise typer.Exit(code=1)
 
 

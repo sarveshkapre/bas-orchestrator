@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Any
 
 
@@ -84,3 +85,45 @@ def _validate_result(item: dict[str, Any], index: int, errors: list[str]) -> Non
         errors.append(f"results[{index}].evidence_ref must be string")
     if "notes" in item and item["notes"] is not None and not isinstance(item["notes"], str):
         errors.append(f"results[{index}].notes must be string or null")
+
+
+def diff_summary(
+    golden: object, candidate: object, *, ignore_fields: Iterable[str] = ()
+) -> list[str]:
+    if not isinstance(golden, dict):
+        return ["golden summary must be a JSON object"]
+    if not isinstance(candidate, dict):
+        return ["candidate summary must be a JSON object"]
+
+    ignore = set(ignore_fields)
+    golden_norm = {key: value for key, value in golden.items() if key not in ignore}
+    candidate_norm = {key: value for key, value in candidate.items() if key not in ignore}
+
+    diffs: list[str] = []
+    _diff_values(golden_norm, candidate_norm, path="$", diffs=diffs)
+    return diffs
+
+
+def _diff_values(golden: object, candidate: object, *, path: str, diffs: list[str]) -> None:
+    if isinstance(golden, dict) and isinstance(candidate, dict):
+        golden_keys = set(golden.keys())
+        candidate_keys = set(candidate.keys())
+        for key in sorted(golden_keys - candidate_keys):
+            diffs.append(f"{path}.{key} missing in candidate")
+        for key in sorted(candidate_keys - golden_keys):
+            diffs.append(f"{path}.{key} extra in candidate")
+        for key in sorted(golden_keys & candidate_keys):
+            _diff_values(golden[key], candidate[key], path=f"{path}.{key}", diffs=diffs)
+        return
+
+    if isinstance(golden, list) and isinstance(candidate, list):
+        if len(golden) != len(candidate):
+            diffs.append(
+                f"{path} length differs (golden {len(golden)} vs candidate {len(candidate)})"
+            )
+        for index, (gold_item, cand_item) in enumerate(zip(golden, candidate, strict=False)):
+            _diff_values(gold_item, cand_item, path=f"{path}[{index}]", diffs=diffs)
+        return
+
+    if golden != candidate:
+        diffs.append(f"{path} differs (golden {golden!r} vs candidate {candidate!r})")
