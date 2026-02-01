@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from bas_orchestrator.agent_client import AgentClientConfig
 from bas_orchestrator.engine import (
     CampaignLoadError,
+    compute_policy_hash,
     effective_allowlist,
     load_campaign,
     load_policy,
@@ -59,6 +60,8 @@ REPORT_EXIT_NONZERO_OPT = typer.Option(
 )
 VALIDATE_SUMMARY_ARG = typer.Argument(..., help="Path to summary JSON")
 VALIDATE_SUMMARY_JSON_OPT = typer.Option(False, "--json", help="Emit machine-readable JSON output")
+POLICY_HASH_ARG = typer.Argument(..., help="Path to policy YAML/JSON")
+POLICY_HASH_JSON_OPT = typer.Option(False, "--json", help="Emit machine-readable JSON output")
 VALIDATE_CAMPAIGN_ARG = typer.Argument(..., help="Path to campaign YAML")
 VALIDATE_CAMPAIGN_POLICY_OPT = typer.Option(
     None, "--policy", help="Policy YAML/JSON path with allowlists"
@@ -367,6 +370,25 @@ def validate_summary(
     for error in errors:
         typer.echo(f"- {error}")
     raise typer.Exit(code=1)
+
+
+@app.command()
+def policy_hash(
+    policy_path: Path = POLICY_HASH_ARG,
+    json_output: bool = POLICY_HASH_JSON_OPT,
+) -> None:
+    try:
+        policy = load_policy(policy_path)
+    except CampaignLoadError as exc:
+        if json_output:
+            typer.echo(json.dumps({"ok": False, "reason": "invalid_policy"}))
+        raise typer.Exit(code=2) from exc
+
+    digest = compute_policy_hash(policy)
+    if json_output:
+        typer.echo(json.dumps({"ok": True, "policy_hash": digest}, sort_keys=True))
+        return
+    typer.echo(digest)
 
 
 @app.command()

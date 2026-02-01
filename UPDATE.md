@@ -9,6 +9,7 @@
 - Added evidence summary schema export for downstream tooling.
 - Added `bas validate-summary` for CI validation of report output.
 - Added TLS client auth validation for agent handshake (cert/key pairing).
+- Added `bas policy-hash` helper for CI usage.
 - Hardened `bas verify` to fail cleanly on invalid evidence pack schemas.
 - Packaging + repo hygiene: SPDX license metadata and ignore `build/` + `dist/`.
 

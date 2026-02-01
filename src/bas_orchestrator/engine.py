@@ -246,6 +246,12 @@ def _sign_payload(evidence: EvidencePack, key: str) -> str:
     return hmac.new(key.encode("utf-8"), message, hashlib.sha256).hexdigest()
 
 
+def compute_policy_hash(policy: PolicySpec) -> str:
+    payload = policy.model_dump(mode="json")
+    message = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(message).hexdigest()
+
+
 def effective_allowlist(module_spec: ModuleSpec, policy: PolicySpec | None) -> list[str]:
     if policy is None:
         return module_spec.scope_allowlist

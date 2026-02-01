@@ -17,5 +17,5 @@ make release
 
 ## Next 3 improvements
 1. Add agent client CA bundle error messaging (missing/invalid CA file).
-2. Add policy hash derivation helper for CI usage.
-3. Add evidence summary drift detection (diff against golden).
+2. Add evidence summary drift detection (diff against golden).
+3. Add policy hash docs to Agent API spec.

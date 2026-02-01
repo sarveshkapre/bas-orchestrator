@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## [Unreleased]
+- Added `bas policy-hash` to derive expected agent policy hashes.
 - Added TLS client auth validation to agent handshake (cert/key pairing).
 - Added `bas validate-summary` for CI validation of evidence summaries.
 - Added evidence summary JSON schema export for downstream tooling.
