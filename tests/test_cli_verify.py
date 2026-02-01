@@ -55,3 +55,13 @@ def test_verify_command_json_output(tmp_path: Path) -> None:
     result = runner.invoke(app, ["verify", str(evidence_path), "--sign-key", "test-key", "--json"])
     assert result.exit_code == 0
     assert json.loads(result.stdout.strip()) == {"ok": True}
+
+
+def test_verify_command_invalid_schema(tmp_path: Path) -> None:
+    evidence_path = tmp_path / "evidence.json"
+    evidence_path.write_text("{}")
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["verify", str(evidence_path), "--sign-key", "test-key", "--json"])
+    assert result.exit_code == 2
+    assert json.loads(result.stdout.strip()) == {"ok": False, "reason": "invalid_schema"}

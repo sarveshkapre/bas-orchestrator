@@ -1,6 +1,9 @@
 # CHANGELOG
 
 ## [Unreleased]
+- Added `bas report` to summarize evidence packs (human-readable or JSON) with CI-friendly exit codes.
+- Hardened `bas verify` to fail cleanly on invalid evidence pack schemas.
+- Updated packaging metadata to use SPDX license expression (removes setuptools deprecation warning).
 - Scaffolded repository structure.
 - Added CLI skeleton, campaign spec validation, and evidence pack output.
 - Added deterministic run mode for reproducible evidence packs.

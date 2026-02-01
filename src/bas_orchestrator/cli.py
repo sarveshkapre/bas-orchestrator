@@ -5,6 +5,7 @@ from pathlib import Path
 
 import typer
 import yaml
+from pydantic import ValidationError
 
 from bas_orchestrator.agent_client import AgentClientConfig
 from bas_orchestrator.engine import (
@@ -44,6 +45,13 @@ VERIFY_JSON_OPT = typer.Option(False, "--json", help="Emit machine-readable JSON
 VALIDATE_SPEC_OPT = typer.Option(..., "--spec", help="Path to module spec YAML/JSON")
 VALIDATE_RESULT_OPT = typer.Option(None, "--result", help="Path to module result JSON")
 SCHEMA_OUT_OPT = typer.Option(..., "--out", help="Output directory for JSON schemas")
+REPORT_EVIDENCE_ARG = typer.Argument(..., help="Path to evidence pack JSON")
+REPORT_JSON_OPT = typer.Option(False, "--json", help="Emit machine-readable JSON output")
+REPORT_EXIT_NONZERO_OPT = typer.Option(
+    False,
+    "--exit-nonzero",
+    help="Exit with code 1 if any module failed/errored (code 2 is reserved for invalid inputs)",
+)
 
 EXAMPLE_CAMPAIGN = """version: v1
 name: "basic-campaign"
@@ -151,7 +159,12 @@ def verify(
         if json_output:
             typer.echo(json.dumps({"ok": False, "reason": "invalid_json"}))
         raise typer.Exit(code=2) from exc
-    evidence = EvidencePack.model_validate(payload)
+    try:
+        evidence = EvidencePack.model_validate(payload)
+    except ValidationError as exc:
+        if json_output:
+            typer.echo(json.dumps({"ok": False, "reason": "invalid_schema"}))
+        raise typer.Exit(code=2) from exc
     if not evidence.signature or not evidence.signature_alg:
         if json_output:
             typer.echo(json.dumps({"ok": False, "reason": "missing_signature"}))
@@ -205,3 +218,93 @@ def _load_payload(path: Path) -> object:
 def export_schemas(out: Path = SCHEMA_OUT_OPT) -> None:
     dump_schemas(out)
     typer.echo(f"wrote schemas to {out}")
+
+
+@app.command()
+def report(
+    evidence_path: Path = REPORT_EVIDENCE_ARG,
+    json_output: bool = REPORT_JSON_OPT,
+    exit_nonzero: bool = REPORT_EXIT_NONZERO_OPT,
+) -> None:
+    if not evidence_path.exists():
+        raise typer.BadParameter(f"Evidence file not found: {evidence_path}")
+    try:
+        payload = json.loads(evidence_path.read_text())
+    except json.JSONDecodeError as exc:
+        if json_output:
+            typer.echo(json.dumps({"ok": False, "reason": "invalid_json"}))
+        raise typer.Exit(code=2) from exc
+
+    try:
+        evidence = EvidencePack.model_validate(payload)
+    except ValidationError as exc:
+        if json_output:
+            typer.echo(json.dumps({"ok": False, "reason": "invalid_schema"}))
+        raise typer.Exit(code=2) from exc
+
+    counts = {"total": 0, "passed": 0, "failed": 0, "errored": 0, "skipped": 0}
+    for result in evidence.results:
+        counts["total"] += 1
+        if result.status == "pass":
+            counts["passed"] += 1
+        elif result.status == "fail":
+            counts["failed"] += 1
+        elif result.status == "error":
+            counts["errored"] += 1
+        else:
+            counts["skipped"] += 1
+
+    ok = counts["failed"] == 0 and counts["errored"] == 0
+
+    if json_output:
+        typer.echo(
+            json.dumps(
+                {
+                    "ok": ok,
+                    "campaign_name": evidence.campaign_name,
+                    "run_id": evidence.run_id,
+                    "started_at": evidence.started_at.isoformat(),
+                    "finished_at": evidence.finished_at.isoformat(),
+                    "score": evidence.score,
+                    "summary": counts,
+                    "results": [
+                        {
+                            "module_id": result.module_id,
+                            "status": result.status,
+                            "notes": result.notes,
+                        }
+                        for result in evidence.results
+                    ],
+                },
+                sort_keys=True,
+            )
+        )
+        if exit_nonzero and not ok:
+            raise typer.Exit(code=1)
+        return
+
+    typer.echo(f"Campaign: {evidence.campaign_name}")
+    typer.echo(f"Run ID:   {evidence.run_id}")
+    typer.echo(f"Started:  {evidence.started_at.isoformat()}")
+    typer.echo(f"Finished: {evidence.finished_at.isoformat()}")
+    typer.echo(
+        "Score:    "
+        f"{evidence.score:.2f} (passed {counts['passed']}/{counts['total']}; "
+        f"failed {counts['failed']}; errored {counts['errored']}; skipped {counts['skipped']})"
+    )
+    typer.echo("")
+    typer.echo("Modules")
+
+    module_col = max(len("module_id"), max((len(r.module_id) for r in evidence.results), default=0))
+    status_col = max(len("status"), max((len(r.status) for r in evidence.results), default=0))
+
+    typer.echo(f"{'module_id'.ljust(module_col)}  {'status'.ljust(status_col)}  notes")
+    typer.echo(f"{'-' * module_col}  {'-' * status_col}  -----")
+    for result in evidence.results:
+        notes = result.notes or ""
+        typer.echo(
+            f"{result.module_id.ljust(module_col)}  {result.status.ljust(status_col)}  {notes}"
+        )
+
+    if exit_nonzero and not ok:
+        raise typer.Exit(code=1)
