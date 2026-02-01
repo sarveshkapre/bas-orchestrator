@@ -1,0 +1,86 @@
+from __future__ import annotations
+
+from typing import Any
+
+
+def validate_summary(payload: object) -> list[str]:
+    if not isinstance(payload, dict):
+        return ["summary must be a JSON object"]
+
+    errors: list[str] = []
+    required = {
+        "ok",
+        "campaign_name",
+        "run_id",
+        "started_at",
+        "finished_at",
+        "score",
+        "summary",
+        "results",
+    }
+
+    missing = sorted(required - set(payload.keys()))
+    for field in missing:
+        errors.append(f"missing field: {field}")
+
+    if "ok" in payload and not isinstance(payload["ok"], bool):
+        errors.append("field ok must be boolean")
+    if "campaign_name" in payload and not isinstance(payload["campaign_name"], str):
+        errors.append("field campaign_name must be string")
+    if "run_id" in payload and not isinstance(payload["run_id"], str):
+        errors.append("field run_id must be string")
+    if "started_at" in payload and not isinstance(payload["started_at"], str):
+        errors.append("field started_at must be string")
+    if "finished_at" in payload and not isinstance(payload["finished_at"], str):
+        errors.append("field finished_at must be string")
+    if "score" in payload and not isinstance(payload["score"], (int, float)):
+        errors.append("field score must be number")
+
+    if "summary" in payload:
+        summary = payload["summary"]
+        if not isinstance(summary, dict):
+            errors.append("field summary must be object")
+        else:
+            for key in ("total", "passed", "failed", "errored", "skipped"):
+                if key not in summary:
+                    errors.append(f"summary missing field: {key}")
+                    continue
+                value = summary[key]
+                if not isinstance(value, int) or value < 0:
+                    errors.append(f"summary field {key} must be non-negative integer")
+
+    if "results" in payload:
+        results = payload["results"]
+        if not isinstance(results, list):
+            errors.append("field results must be array")
+        else:
+            for index, item in enumerate(results):
+                if not isinstance(item, dict):
+                    errors.append(f"results[{index}] must be object")
+                    continue
+                _validate_result(item, index, errors)
+
+    return errors
+
+
+def _validate_result(item: dict[str, Any], index: int, errors: list[str]) -> None:
+    required = {"module_id", "status", "duration_ms", "evidence_ref"}
+    missing = sorted(required - set(item.keys()))
+    for field in missing:
+        errors.append(f"results[{index}] missing field: {field}")
+
+    if "module_id" in item and not isinstance(item["module_id"], str):
+        errors.append(f"results[{index}].module_id must be string")
+    if "status" in item:
+        if not isinstance(item["status"], str):
+            errors.append(f"results[{index}].status must be string")
+        elif item["status"] not in {"pass", "fail", "skipped", "error"}:
+            errors.append(f"results[{index}].status must be pass/fail/skipped/error")
+    if "duration_ms" in item:
+        value = item["duration_ms"]
+        if not isinstance(value, int) or value < 0:
+            errors.append(f"results[{index}].duration_ms must be non-negative integer")
+    if "evidence_ref" in item and not isinstance(item["evidence_ref"], str):
+        errors.append(f"results[{index}].evidence_ref must be string")
+    if "notes" in item and item["notes"] is not None and not isinstance(item["notes"], str):
+        errors.append(f"results[{index}].notes must be string or null")

@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## [Unreleased]
+- Added `bas validate-summary` for CI validation of evidence summaries.
 - Added evidence summary JSON schema export for downstream tooling.
 - Hardened remote agent trust checks (reject insecure http by default, validate handshake capabilities).
 - Added schema compatibility tests to lock core campaign/evidence contracts.

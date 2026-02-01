@@ -18,4 +18,4 @@ make release
 ## Next 3 improvements
 1. Add agent client TLS hardening tests (cert/CA edge cases).
 2. Add policy hash derivation helper for CI usage.
-3. Add evidence summary validation command for CI pipelines.
+3. Add evidence summary drift detection (diff against golden).

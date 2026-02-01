@@ -20,6 +20,7 @@ from bas_orchestrator.engine import (
 from bas_orchestrator.models import EvidencePack, ModuleResult, ModuleSpec
 from bas_orchestrator.modules.registry import get_module, list_modules
 from bas_orchestrator.schema import dump_schemas
+from bas_orchestrator.summary_validate import validate_summary as validate_summary_payload
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -56,6 +57,8 @@ REPORT_EXIT_NONZERO_OPT = typer.Option(
     "--exit-nonzero",
     help="Exit with code 1 if any module failed/errored (code 2 is reserved for invalid inputs)",
 )
+VALIDATE_SUMMARY_ARG = typer.Argument(..., help="Path to summary JSON")
+VALIDATE_SUMMARY_JSON_OPT = typer.Option(False, "--json", help="Emit machine-readable JSON output")
 VALIDATE_CAMPAIGN_ARG = typer.Argument(..., help="Path to campaign YAML")
 VALIDATE_CAMPAIGN_POLICY_OPT = typer.Option(
     None, "--policy", help="Policy YAML/JSON path with allowlists"
@@ -333,6 +336,37 @@ def report(
 
     if exit_nonzero and not ok:
         raise typer.Exit(code=1)
+
+
+@app.command()
+def validate_summary(
+    summary_path: Path = VALIDATE_SUMMARY_ARG,
+    json_output: bool = VALIDATE_SUMMARY_JSON_OPT,
+) -> None:
+    if not summary_path.exists():
+        raise typer.BadParameter(f"Summary file not found: {summary_path}")
+    try:
+        payload = json.loads(summary_path.read_text())
+    except json.JSONDecodeError as exc:
+        if json_output:
+            typer.echo(json.dumps({"ok": False, "reason": "invalid_json"}))
+        raise typer.Exit(code=2) from exc
+
+    errors = validate_summary_payload(payload)
+    ok = not errors
+    if json_output:
+        typer.echo(json.dumps({"ok": ok, "errors": errors}, sort_keys=True))
+        if not ok:
+            raise typer.Exit(code=1)
+        return
+
+    if ok:
+        typer.echo("summary ok")
+        return
+    typer.echo("summary invalid")
+    for error in errors:
+        typer.echo(f"- {error}")
+    raise typer.Exit(code=1)
 
 
 @app.command()
