@@ -112,3 +112,26 @@ def test_handshake_requires_cert_and_key_pair() -> None:
         assert "cert_path and key_path" in str(exc)
     else:
         raise AssertionError("expected AgentClientError")
+
+
+def test_ca_bundle_error_message(tmp_path: Path) -> None:
+    bad_ca = tmp_path / "missing.pem"
+    client = AgentClient(
+        AgentClientConfig(
+            base_url="https://agent",
+            enabled=True,
+            ca_path=str(bad_ca),
+            mock_capabilities=["noop"],
+        )
+    )
+    try:
+        client.handshake(
+            agent_id="agent-1",
+            capabilities=["noop"],
+            version="v1",
+            expected_policy_hash=None,
+        )
+    except AgentClientError as exc:
+        assert "CA bundle" in str(exc)
+    else:
+        raise AssertionError("expected AgentClientError")

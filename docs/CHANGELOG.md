@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## [Unreleased]
+- Added explicit CA bundle error messaging for agent TLS setup.
 - Documented policy hash derivation in Agent API spec.
 - Added `bas diff-summary` to detect evidence summary drift against a golden file.
 - Added `bas policy-hash` to derive expected agent policy hashes.

@@ -111,7 +111,10 @@ class AgentClient:
     def _ssl_context(self) -> ssl.SSLContext:
         context = ssl.create_default_context()
         if self._config.ca_path:
-            context.load_verify_locations(self._config.ca_path)
+            try:
+                context.load_verify_locations(self._config.ca_path)
+            except Exception as exc:  # pragma: no cover - depends on local certs
+                raise AgentClientError(f"Failed to load CA bundle: {exc}") from exc
         if self._config.cert_path and self._config.key_path:
             context.load_cert_chain(self._config.cert_path, self._config.key_path)
         return context
