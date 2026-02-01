@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## [Unreleased]
+- Engine now verifies evidence summary counts conform to the schema before emitting evidence packs.
 - Added diff-summary ignore-path patterns for nested drift suppression.
 - Added explicit CA bundle error messaging for agent TLS setup.
 - Documented policy hash derivation in Agent API spec.

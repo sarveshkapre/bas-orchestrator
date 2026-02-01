@@ -188,3 +188,16 @@ def _pattern_to_regex(pattern: str) -> str:
             escaped += re.escape(char)
     escaped = escaped.replace(re.escape(placeholder), r"\[\d+\]")
     return escaped
+
+
+def validate_summary_counts(summary: dict[str, int]) -> list[str]:
+    errors: list[str] = []
+    required = {"total", "passed", "failed", "errored", "skipped"}
+    for key in sorted(required):
+        if key not in summary:
+            errors.append(f"summary missing field: {key}")
+            continue
+        value = summary[key]
+        if not isinstance(value, int) or value < 0:
+            errors.append(f"summary field {key} must be non-negative integer")
+    return errors

@@ -14,6 +14,7 @@ from bas_orchestrator.agent_client import AgentClient, AgentClientConfig, AgentC
 from bas_orchestrator.models import CampaignSpec, EvidencePack, ModuleResult, ModuleSpec, PolicySpec
 from bas_orchestrator.modules.base import ModuleContext
 from bas_orchestrator.modules.registry import get_module
+from bas_orchestrator.summary_validate import validate_summary_counts
 
 
 class CampaignLoadError(Exception):
@@ -280,4 +281,7 @@ def score_results(results: list[ModuleResult]) -> tuple[float, dict[str, Any]]:
         "errored": errored,
         "skipped": skipped,
     }
+    errors = validate_summary_counts(summary)
+    if errors:
+        raise ValueError(f"Invalid summary counts: {errors}")
     return score, summary

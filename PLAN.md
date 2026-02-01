@@ -27,6 +27,7 @@ make build
 ```
 
 ## Shipped (most recent first)
+- 2026-02-01: Evidence summary counts validated in engine outputs.
 - 2026-02-01: Added diff-summary ignore-path patterns for nested fields.
 - 2026-02-01: Added CA bundle error messaging for agent TLS setup.
 - 2026-02-01: Documented policy hash derivation in agent API spec.

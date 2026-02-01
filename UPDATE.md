@@ -14,6 +14,7 @@
 - Documented policy hash derivation in Agent API spec.
 - Added explicit CA bundle error messaging for agent TLS setup.
 - Added diff-summary ignore-path support for nested fields.
+- Validates evidence summary counts before emitting evidence packs.
 - Hardened `bas verify` to fail cleanly on invalid evidence pack schemas.
 - Packaging + repo hygiene: SPDX license metadata and ignore `build/` + `dist/`.
 
